@@ -3,7 +3,9 @@ using Expressions.Task3.E3SQueryProvider.Models.Request;
 using Microsoft.AspNetCore.WebUtilities;
 using Newtonsoft.Json;
 using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Expressions.Task3.E3SQueryProvider
 {
@@ -32,17 +34,7 @@ namespace Expressions.Task3.E3SQueryProvider
         {
             string metaTypeName = GetMetaTypeName(type);
 
-            var ftsQueryRequest = new FtsQueryRequest
-            {
-                Statements = new List<Statement>
-                {
-                    new Statement {
-                        Query = query
-                    }
-                },
-                Start = start,
-                Limit = limit
-            };
+            var ftsQueryRequest = this.GetFtsQueryRequest(query, start, limit);
 
             var ftsQueryRequestString = JsonConvert.SerializeObject(ftsQueryRequest);
 
@@ -69,6 +61,23 @@ namespace Expressions.Task3.E3SQueryProvider
                 throw new Exception($"Entity {type.FullName} do not have attribute E3SMetaType");
 
             return ((E3SMetaTypeAttribute)attributes[0]).Name;
+        }
+
+        private FtsQueryRequest GetFtsQueryRequest(string query, int start, int limit)
+        {
+            var queries = query.Split(",", StringSplitOptions.RemoveEmptyEntries);
+
+            var ftsQueryRequest = new FtsQueryRequest
+            {
+                Start = start,
+                Limit = limit
+            };
+            ftsQueryRequest.Statements = queries.Select(x => new Statement()
+            {
+                Query = x
+            }).ToList();
+
+            return ftsQueryRequest;
         }
     }
 }
